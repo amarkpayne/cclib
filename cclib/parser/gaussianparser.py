@@ -765,6 +765,39 @@ class Gaussian(logfileparser.Logfile):
             if not hasattr(self, "scfenergies"):
                 self.scfenergies = []
             self.scfenergies.append(utils.convertor(self.float(line.split()[1]), "hartree", "eV"))
+        # gmagoon 6/8/09: added molecular mass parsing (units will be amu)
+        # example line: " Molecular mass:   208.11309 amu."
+        if line[1:16] == 'Molecular mass:':
+            self.molmass = self.float(line.split()[2])
+
+        # gmagoon 5/27/09: added rotsymm for reading rotational symmetry number
+        # it would probably be better to read in point group (or calculate separately with OpenBabel, and I probably won't end up using this
+        # example line: " Rotational symmetry number  1."
+        if line[1:27] == 'Rotational symmetry number':
+            self.rotsymm = int(self.float(line.split()[3]))
+
+        # gmagoon 5/28/09: added rotcons for rotational constants (at each step) in GHZ
+        # example line:  Rotational constants (GHZ):     17.0009421      5.8016756      4.5717439
+        # could also read in moment of inertia, but this should just differ by a constant: rot cons= h/(8*Pi^2*I)
+        # note that the last occurence of this in the thermochemistry section has reduced precision, so we will want to use the 2nd to last instance
+        if line[1:28] == 'Rotational constants (GHZ):':
+            if not hasattr(self, "rotcons"):
+                self.rotcons = []
+
+            # some linear cases (e.g. if linearity is not recognized) can have asterisks ****... for the first rotational constant; e.g.:
+            # Rotational constants (GHZ):      ************    12.73690    12.73690
+            # or:
+            # Rotational constants (GHZ):***************     10.4988228     10.4988223
+            # if this is the case, replace the asterisks with a 0.0
+            # we can also have cases like this:
+            # Rotational constants (GHZ):6983905.3278703     11.8051382     11.8051183
+            # if line[28:29] == '*' or line.split()[3].startswith('*'):
+            if line[37:38] == '*':
+                self.rotcons.append([0.0] + map(float, line[28:].split()[
+                                                       -2:]))  # record last 0.0 and last 2 numbers (words) in the string following the prefix
+            else:
+                self.rotcons.append(map(float, line[28:].split()[
+                                               -3:]))  # record last 3 numbers (words) in the string following the prefix
 
         # Total energies after Moller-Plesset corrections.
         # Second order correction is always first, so its first occurance
@@ -860,7 +893,14 @@ class Gaussian(logfileparser.Logfile):
                 try:
                     value = self.float(parts[2])
                 except ValueError:
-                    self.logger.error("Problem parsing the value for geometry optimisation: %s is not a number." % parts[2])
+                    value = -1.0
+                # self.logger.error("Problem parsing the value for geometry optimisation: %s is not a number." % parts[2])
+                # gmagoon 20111202: because the value can become **** (as shown below, I'm changing this to not report an error, and instead just set the value to -1.0
+                #         Item               Value     Threshold  Converged?
+                # Maximum Force            ********     0.000015     NO
+                # RMS     Force            1.813626     0.000010     NO
+                # Maximum Displacement     0.915407     0.000060     NO
+                # RMS     Displacement     0.280831     0.000040     NO
                 else:
                     newlist[i] = value
                 self.geotargets[i] = self.float(parts[3])
@@ -992,12 +1032,10 @@ class Gaussian(logfileparser.Logfile):
                         #  QVGXLLKOCUKJST-UHFFFAOYAJmult3Fixed.out
                         #  donated by Gregory Magoon (gmagoon).
                         if (hasattr(self, "homos")):
-                            # Extend the array to two elements
-                            # 'HOMO' indexes the HOMO in the arrays
-                            self.homos.append(i-1)
-                        else:
-                            # 'HOMO' indexes the HOMO in the arrays
-                            self.homos = [i - 1]
+                            self.homos.resize([2])  # Extend the array to two elements
+                            self.homos[1] = i - 1  # 'HOMO' indexes the HOMO in the arrays
+                        else:  # otherwise (e.g. for O triplet) there is no alpha virtual orbital, only beta virtual orbitals, and we initialize the array with one element
+                            self.homos = numpy.array([i - 1], "i")  # 'HOMO' indexes the HOMO in the arrays
                     parts = line[17:].split()
                     for x in parts:
                         self.mosyms[1].append(self.normalisesym(x.strip('()')))
