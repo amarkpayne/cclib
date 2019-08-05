@@ -77,6 +77,7 @@ class ccData(object):
         scfenergies -- molecular electronic energies after SCF (Hartree-Fock, DFT) (array[1], eV)
         scftargets -- targets for convergence of the SCF (array[2])
         scfvalues -- current values for convergence of the SCF (list of arrays[2])
+        stericenergy -- final steric energy (for MM4 calculations)
         temperature -- temperature used for Thermochemistry (float, kelvin)
         time -- time in molecular dynamics and other trajectories (array[1], fs)
         transprop -- all absorption and emission spectra (dictionary {name:(etenergies, etoscs)})
@@ -129,6 +130,7 @@ class ccData(object):
        "metadata":         Attribute(dict,             'TBD',                         'N/A'),
        "mocoeffs":         Attribute(list,             'coeffs',                      'properties:orbitals'),
        "moenergies":       Attribute(list,             'energies',                    'properties:orbitals'),
+       "molmass":          Attribute(float,            'molar mass',                  'N/A'),
        "moments":          Attribute(list,             'total dipole moment',         'properties'),
        "mosyms":           Attribute(list,             'molecular orbital symmetry',  'properties:orbitals'),
        "mpenergies":       Attribute(numpy.ndarray,    'moller plesset',              'properties:energy'),
@@ -144,6 +146,8 @@ class ccData(object):
        "optstatus":        Attribute(numpy.ndarray,    'status',                      'optimization'),
        "polarizabilities": Attribute(list,             'polarizabilities',            'N/A'),
        "pressure":         Attribute(float,            'pressure',                    'properties'),
+       "rotcons":          Attribute(list,             'rotational constants',        'N/A'),
+       "rotsymm":          Attribute(int,              'rotational symmetry',          'N/A'),
        "scancoords":       Attribute(numpy.ndarray,    'step geometry',               'optimization:scan'),
        "scanenergies":     Attribute(list,             'PES energies',                'optimization:scan'),
        "scannames":        Attribute(list,             'variable names',              'optimization:scan'),
@@ -151,6 +155,7 @@ class ccData(object):
        "scfenergies":      Attribute(numpy.ndarray,    'scf energies',                'optimization:scf'),
        "scftargets":       Attribute(numpy.ndarray,    'targets',                     'optimization:scf'),
        "scfvalues":        Attribute(list,             'values',                      'optimization:scf'),
+       "stericenergy":     Attribute(float,            'steric energy',               'N/A'),
        "temperature":      Attribute(float,            'temperature',                 'properties'),
        "time":             Attribute(numpy.ndarray,    'time',                        'N/A'),
        "transprop":        Attribute(dict,             'electronic transitions',      'transitions'),
@@ -169,7 +174,7 @@ class ccData(object):
     _intarrays = ['atomnos', 'coreelectrons', 'homos', 'optstatus']
 
     # Attributes that should be lists of arrays (double precision).
-    _listsofarrays = ['mocoeffs', 'moenergies', 'moments', 'polarizabilities', 'scfvalues']
+    _listsofarrays = ['mocoeffs', 'moenergies', 'moments', 'polarizabilities', 'scfvalues', 'rotcons']
 
     # Attributes that should be dictionaries of arrays (double precision).
     _dictsofarrays = ["atomcharges", "atomspins"]
