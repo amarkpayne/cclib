@@ -6,12 +6,10 @@ and licensed under the LGPL (http://www.gnu.org/copyleft/lgpl.html).
 
 __revision__ = "$Revision: 814 $"
 
-# import re
-
 import numpy
 
-import utils
-import logfileparser
+from cclib.parser import utils
+from cclib.parser import logfileparser
 
 
 def symbol2int(symbol):
