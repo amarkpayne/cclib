@@ -793,11 +793,11 @@ class Gaussian(logfileparser.Logfile):
             # Rotational constants (GHZ):6983905.3278703     11.8051382     11.8051183
             # if line[28:29] == '*' or line.split()[3].startswith('*'):
             if line[37:38] == '*':
-                self.rotcons.append([0.0] + map(float, line[28:].split()[
-                                                       -2:]))  # record last 0.0 and last 2 numbers (words) in the string following the prefix
+                self.rotcons.append([0.0] + list(map(float, line[28:].split()[
+                                                       -2:])))  # record last 0.0 and last 2 numbers (words) in the string following the prefix
             else:
-                self.rotcons.append(map(float, line[28:].split()[
-                                               -3:]))  # record last 3 numbers (words) in the string following the prefix
+                self.rotcons.append(list(map(float, line[28:].split()[
+                                               -3:])))  # record last 3 numbers (words) in the string following the prefix
 
         # Total energies after Moller-Plesset corrections.
         # Second order correction is always first, so its first occurance
